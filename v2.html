@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kyle's Hub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#e0e0e0;display:flex;min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+
+/* Sidebar */
+.side{width:180px;min-height:100vh;border-right:1px solid #1e1e1e;padding:16px 8px;display:flex;flex-direction:column;gap:2px;background:#0e0e0e;position:fixed;top:0;left:0;overflow-y:auto}
+.side-logo{padding:4px 8px 20px;display:flex;align-items:center;gap:8px}
+.side-logo .dot{width:24px;height:24px;background:#fe2c55;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.side-logo span{font-size:15px;font-weight:700;color:#fff}
+.side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#666;text-decoration:none;font-size:13px;font-weight:500;transition:all .15s}
+.side a:hover{background:#1e1e1e;color:#ccc}
+.side a.active{background:#1e1e1e;color:#fe2c55}
+.side .icon{font-size:15px;width:20px;text-align:center}
+.side-div{height:1px;background:#1e1e1e;margin:8px 0}
+.side-btns{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:12px}
+.side-btns button,.side-btns label{width:100%;padding:8px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;font-size:11px;text-align:center;transition:all .15s}
+.side-btns button{color:#888;border-color:#2a2a2a}
+.side-btns button.warn{color:#fff;background:#fe2c55;border-color:#fe2c55}
+.side-btns label{color:#3b82f6;cursor:pointer}
+.side-btns label input{display:none}
+.side-foot{padding:8px 12px;font-size:10px;color:#333;line-height:1.6}
+
+/* Main */
+.main{margin-left:180px;flex:1;padding:24px;max-width:920px}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.hdr h1{font-size:20px;font-weight:700;color:#fff}
+.hdr p{font-size:11px;color:#555}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.hdr-r .status{font-size:11px;transition:all .3s}
+.status-ok{color:#22c55e}
+.status-warn{color:#f59e0b}
+.status-err{color:#ef4444}
+.status-dim{color:#888}
+.badge-unsaved{font-size:10px;color:#f59e0b;background:#f59e0b20;padding:4px 8px;border-radius:4px}
+.btn-back{background:transparent;border:1px solid #2a2a2a;border-radius:6px;padding:6px 14px;color:#666;font-size:12px}
+
+/* Cards */
+.card{background:#141414;border:1px solid #1e1e1e;border-radius:10px;padding:16px;margin-bottom:12px}
+.card-h{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:10px}
+.row{display:flex;gap:8px}
+.row-sb{display:flex;justify-content:space-between;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Inputs */
+.inp{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:8px 12px;color:#fff;font-size:13px;outline:none;width:100%}
+.inp:focus{border-color:#fe2c55}
+.inp-sm{padding:6px 10px;font-size:12px}
+.btn{background:#fe2c55;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:600;flex-shrink:0}
+.btn:hover{background:#e52549}
+
+/* Stats */
+.stats{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.stat{background:#141414;border:1px solid #1e1e1e;border-radius:8px;padding:8px 16px;text-align:center;min-width:90}
+.stat-v{font-size:18px;font-weight:700}
+.stat-l{font-size:10px;color:#555}
+
+/* Daily 4s */
+.d4-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid #1e1e1e;cursor:pointer;transition:all .15s;margin-bottom:6px}
+.d4-item.done{border-color:var(--c)}
+.d4-chk{width:20px;height:20px;border-radius:4px;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;flex-shrink:0}
+.d4-item.done .d4-chk{border-color:var(--c);background:var(--c)}
+
+/* Week grid */
+.wk-grid{display:grid;grid-template-columns:60px repeat(7,1fr);gap:2px;font-size:11px}
+.wk-hdr{text-align:center;color:#555;font-weight:400}
+.wk-hdr.today{color:#fe2c55;font-weight:700}
+.wk-label{display:flex;align-items:center;font-weight:600;font-size:10px}
+.wk-cell{height:26px;border-radius:4px;background:#1a1a1a;cursor:pointer;transition:all .15s}
+.wk-cell:hover{opacity:.8}
+.wk-cell.today-border{border:1px solid #fe2c55}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{padding:6px 4px;text-align:left;color:#555;font-weight:600;font-size:9px;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #2a2a2a}
+td{padding:4px;border-bottom:1px solid #1a1a1a}
+.td-edit{cursor:pointer;min-width:30px}
+.td-edit:hover{color:#fff}
+
+/* Calendar */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-hdr{font-size:11px;color:#444;font-weight:600;padding:6px}
+.cal-day{padding:8px;border-radius:6px;cursor:pointer;font-size:13px;min-height:40px;border:1px solid transparent;position:relative;transition:all .15s}
+.cal-day:hover{background:#1e1e1e}
+.cal-day.today{border-color:#fe2c5540;background:#fe2c5520;color:#fe2c55;font-weight:700}
+.cal-day.all-done{background:#22c55e15;color:#22c55e}
+.cal-day.some-done{background:#eab30810}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:#fe2c55;margin:2px auto 0}
+
+/* Checklist */
+.chk{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e1e1e}
+.chk-box{width:16px;height:16px;border-radius:4px;border:2px solid #444;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff}
+.chk-box.done{border-color:#22c55e;background:#22c55e}
+.chk-t{flex:1;font-size:13px;color:#ccc}
+.chk-t.done{color:#555;text-decoration:line-through}
+.chk-x{font-size:10px;color:#333;cursor:pointer;padding:0 4px}
+.chk-x:hover{color:#ef4444}
+
+/* Status badge */
+.sbadge{font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;white-space:nowrap;position:relative}
+.sbadge-dd{position:absolute;top:100%;left:0;z-index:10;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;padding:4px;min-width:100px;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.sbadge-dd div{padding:4px 8px;font-size:11px;color:#ccc;cursor:pointer;border-radius:4px}
+.sbadge-dd div:hover{background:#2a2a2a}
+
+/* Sections hidden by default */
+.section{display:none}
+.section.active{display:block}
+
+/* Exercise row */
+.ex-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-top:8px}
+
+/* Tools grid */
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tool-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:14px;position:relative}
+.tool-card h4{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px}
+.tool-card p{font-size:11px;color:#666;margin-bottom:6px}
+.tool-card a{font-size:11px;color:#fe2c55;text-decoration:none}
+.tool-card .del{position:absolute;top:8px;right:8px;font-size:10px;color:#333;cursor:pointer}
+
+/* Portfolio dots */
+.pdot{width:12px;height:12px;border-radius:2px;cursor:pointer;transition:all .15s}
+
+@media(max-width:768px){
+  .side{display:none}
+  .main{margin-left:0}
+  .grid2{grid-template-columns:1fr}
+  .stats{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<nav class="side">
+  <div class="side-logo"><div class="dot">K</div><span>Kyle's Hub</span></div>
+  <a href="#" data-sec="home" class="active"><span class="icon">🏠</span>Home</a>
+  <a href="#" data-sec="vm"><span class="icon">💊</span>Vitamonth</a>
+  <a href="#" data-sec="pt"><span class="icon">🪙</span>Penny Thoughts</a>
+  <a href="#" data-sec="kyle"><span class="icon">🎬</span>Kyle.mp4</a>
+  <div class="side-div"></div>
+  <a href="#" data-sec="targets"><span class="icon">🎯</span>Targets</a>
+  <a href="#" data-sec="finance"><span class="icon">💰</span>Finances</a>
+  <a href="#" data-sec="health"><span class="icon">💪</span>Health</a>
+  <a href="#" data-sec="ugc"><span class="icon">📦</span>UGC</a>
+  <a href="#" data-sec="tools"><span class="icon">🔧</span>Tools</a>
+  <div class="side-btns">
+    <button id="saveBtn" onclick="forceSave()">💾 Save Now</button>
+    <button onclick="exportData()" style="color:#22c55e">📤 Export Backup</button>
+    <label>📥 Import Backup<input type="file" accept=".json" onchange="importData(event)"></label>
+  </div>
+  <div class="side-foot">Kyle Crookshank<br>Glasgow · 2026 · V5</div>
+</nav>
+
+<div class="main">
+  <div class="hdr">
+    <div><h1 id="secTitle">🏠 Home</h1><p id="dateStr"></p></div>
+    <div class="hdr-r">
+      <span id="unsavedBadge" class="badge-unsaved" style="display:none">unsaved changes</span>
+      <span id="saveStatus" class="status"></span>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="sec-home" class="section active"></div>
+  <!-- VM -->
+  <div id="sec-vm" class="section"></div>
+  <!-- PT -->
+  <div id="sec-pt" class="section"></div>
+  <!-- KYLE -->
+  <div id="sec-kyle" class="section"></div>
+  <!-- TARGETS -->
+  <div id="sec-targets" class="section"></div>
+  <!-- FINANCE -->
+  <div id="sec-finance" class="section"></div>
+  <!-- HEALTH -->
+  <div id="sec-health" class="section"></div>
+  <!-- UGC -->
+  <div id="sec-ugc" class="section"></div>
+  <!-- TOOLS -->
+  <div id="sec-tools" class="section"></div>
+</div>
+
+<script>
+// ===== DATA =====
+const INIT={
+  d4:{},todos:[],weekly:[],ideas:[],calEvents:{},
+  content:{vm:[],pt:[],kyle:[]},
+  income:{vm:500,ugc:0,joinery:0,other:0},
+  investments:{snp:6326,trading:61},savings:4000,
+  targets:[
+    {id:1,t:"10k followers on PT",d:false},{id:2,t:"20-30 commission sales",d:false},
+    {id:3,t:"Body I'm proud of",d:false},{id:4,t:"£3,000+/month",d:false},
+    {id:5,t:"Own van",d:false},{id:6,t:"Decent family relationship",d:false},
+    {id:7,t:"Praying daily",d:false},{id:8,t:"Fully remote",d:false},
+    {id:9,t:"Help 1 person make online income",d:false},{id:10,t:"5 UGC deals",d:false},
+    {id:11,t:"£10k invested S&P",d:false},{id:12,t:"Read 3 books",d:false},
+    {id:13,t:"Travel somewhere new",d:false}
+  ],
+  gym:{split:"Upper A / Lower / Upper B",focus:"IT Band - tennis ball daily",
+    exercises:[
+      {id:1,name:"Bench Press",weight:"60kg",sets:"4x8",group:"upperA"},
+      {id:2,name:"Overhead Press",weight:"35kg",sets:"3x10",group:"upperA"},
+      {id:3,name:"Lat Pulldown",weight:"50kg",sets:"4x10",group:"upperA"},
+      {id:4,name:"Cable Rows",weight:"45kg",sets:"4x10",group:"upperB"},
+      {id:5,name:"Bicep Curls",weight:"12kg",sets:"3x12",group:"upperB"},
+      {id:6,name:"Tricep Pushdown",weight:"25kg",sets:"3x12",group:"upperB"},
+    ],notes:"Skip lower until IT band calms. See physio when home."},
+  ugcBrands:[],ugcPortfolio:{hw:0,lt:0,tg:0,fd:0,oa:0,daily:0,meet:0},
+  tools:[
+    {id:1,name:"Hook Generator",url:"",desc:"Type topic, get 10 hooks"},
+    {id:2,name:"Retention Calculator",url:"",desc:"Video length + watch time = %"},
+    {id:3,name:"Portfolio Website",url:"",desc:"TikTok-style UGC portfolio"},
+    {id:4,name:"Transkriptor",url:"https://transkriptor.com",desc:"Video transcription"},
+    {id:5,name:"Canva",url:"https://canva.com",desc:"Portfolio deck + graphics"},
+    {id:6,name:"CapCut",url:"https://capcut.com",desc:"Video editing"},
+    {id:7,name:"TikTok Ads Library",url:"https://library.tiktok.com",desc:"Find brands running UGC ads"},
+  ]
+};
+
+const D4C=[{key:"Wealth",color:"#22c55e",pts:4},{key:"Posted",color:"#f97316",pts:3},{key:"Health",color:"#eab308",pts:2},{key:"Meals",color:"#ef4444",pts:1}];
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const SNAMES={home:"🏠 Home",vm:"💊 Vitamonth",pt:"🪙 Penny Thoughts",kyle:"🎬 Kyle.mp4",targets:"🎯 Targets",finance:"💰 Finances",health:"💪 Health",ugc:"📦 UGC",tools:"🔧 Tools"};
+const CSTATUSES=["Idea","Scripted","Filmed","Edited","Posted"];
+const BSTATUSES=["Research","Pitched","In Discussion","Deal Locked","Pass"];
+
+let D,curSec="home",calM=new Date().getMonth(),calY=new Date().getFullYear(),d4Dt=todayKey(),unsaved=false,saveT=null;
+
+// ===== UTILS =====
+function todayKey(){return new Date().toISOString().split("T")[0]}
+function dk(d){return d.toISOString().split("T")[0]}
+function dl(s){return new Date(s+"T12:00:00").getDate()}
+function dn(s){return DAYS[((new Date(s+"T12:00:00").getDay()+6)%7)]}
+
+function getWeek(){
+  const d=new Date(),day=d.getDay(),diff=d.getDate()-day+(day===0?-6:1);
+  return Array.from({length:7},(_,i)=>{const x=new Date(d);x.setDate(diff+i);return dk(x)});
+}
+function getMonth(y,m){
+  const f=new Date(y,m,1),l=new Date(y,m+1,0),s=(f.getDay()+6)%7,days=[];
+  for(let i=0;i<s;i++)days.push(null);
+  for(let i=1;i<=l.getDate();i++)days.push(dk(new Date(y,m,i)));
+  return days;
+}
+function uid(){return Date.now()+Math.random().toString(36).substr(2,5)}
+
+// ===== STORAGE =====
+const JB_KEY="$2a$10$tB86CuQj6Eu5pEUfRv796.Yh7mm/0lKYMVubYwFRFDO17g8iiAaRC";
+const JB_URL="https://api.jsonbin.io/v3/b";
+let binId=null;
+
+async function loadData(){
+  // Try localStorage first for instant load
+  try{const s=localStorage.getItem("kyle-hub-v6");if(s){D={...INIT,...JSON.parse(s)};render()}}catch(e){}
+
+  // Check for existing bin ID
+  try{binId=localStorage.getItem("kyle-bin-id")}catch(e){}
+
+  if(binId){
+    // Load from cloud
+    showStatus("loading from cloud...","dim");
+    try{
+      const res=await fetch(JB_URL+"/"+binId+"/latest",{headers:{"X-Access-Key":JB_KEY}});
+      if(res.ok){
+        const json=await res.json();
+        if(json.record){
+          D={...INIT,...json.record};
+          try{localStorage.setItem("kyle-hub-v6",JSON.stringify(D))}catch(e){}
+          showStatus("loaded from cloud ✓","ok");
+          render();
+        }
+      }else{
+        showStatus("cloud load failed, using local","warn");
+        if(!D)D=JSON.parse(JSON.stringify(INIT));
+      }
+    }catch(e){
+      showStatus("offline, using local data","warn");
+      if(!D)D=JSON.parse(JSON.stringify(INIT));
+    }
+  }else{
+    // First time, create a bin
+    if(!D)D=JSON.parse(JSON.stringify(INIT));
+    showStatus("setting up cloud...","dim");
+    try{
+      const res=await fetch(JB_URL,{method:"POST",headers:{"Content-Type":"application/json","X-Access-Key":JB_KEY,"X-Bin-Name":"kyle-dashboard"},body:JSON.stringify(D)});
+      if(res.ok){
+        const json=await res.json();
+        binId=json.metadata.id;
+        try{localStorage.setItem("kyle-bin-id",binId)}catch(e){}
+        showStatus("cloud storage ready ✓","ok");
+      }else{
+        showStatus("cloud setup failed, using local only","warn");
+      }
+    }catch(e){
+      showStatus("offline, using local only","warn");
+    }
+  }
+  if(!D)D=JSON.parse(JSON.stringify(INIT));
+  render();
+}
+
+async function saveData(){
+  // Always save to localStorage first (instant, reliable)
+  try{localStorage.setItem("kyle-hub-v6",JSON.stringify(D))}catch(e){}
+
+  // Then save to cloud
+  if(binId){
+    showStatus("saving to cloud...","dim");
+    try{
+      const res=await fetch(JB_URL+"/"+binId,{method:"PUT",headers:{"Content-Type":"application/json","X-Access-Key":JB_KEY},body:JSON.stringify(D)});
+      if(res.ok){
+        unsaved=false;updateSaveBtn();
+        showStatus("saved to cloud ✓","ok");
+      }else{
+        showStatus("cloud save failed, saved locally","warn");
+        unsaved=false;updateSaveBtn();
+      }
+    }catch(e){
+      showStatus("offline, saved locally","warn");
+      unsaved=false;updateSaveBtn();
+    }
+  }else{
+    unsaved=false;updateSaveBtn();
+    showStatus("saved locally ✓","ok");
+  }
+}
+
+function queueSave(){
+  unsaved=true;updateSaveBtn();
+  // Save to localStorage immediately
+  try{localStorage.setItem("kyle-hub-v6",JSON.stringify(D))}catch(e){}
+  // Debounce cloud save
+  if(saveT)clearTimeout(saveT);
+  saveT=setTimeout(saveData,3000);
+}
+function forceSave(){if(saveT)clearTimeout(saveT);saveData()}
+function showStatus(t,type){
+  const el=document.getElementById("saveStatus");
+  el.textContent=t;el.className="status status-"+(type||"dim");
+  if(type==="ok")setTimeout(()=>{el.textContent=""},2000);
+}
+function updateSaveBtn(){
+  const b=document.getElementById("saveBtn"),u=document.getElementById("unsavedBadge");
+  if(unsaved){b.className="warn";b.textContent="⚠️ Save Now";u.style.display="inline"}
+  else{b.className="";b.textContent="💾 Save Now";u.style.display="none"}
+}
+function exportData(){
+  const b=new Blob([JSON.stringify(D,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);
+  a.download="kyle-dashboard-"+todayKey()+".json";a.click();URL.revokeObjectURL(a.href);
+  showStatus("exported ✓","ok");
+}
+function importData(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=function(){
+    try{const p=JSON.parse(r.result);D={...INIT,...p};saveData();render();showStatus("imported ✓","ok")}
+    catch(er){showStatus("invalid file!","err")}
+  };r.readAsText(f);e.target.value="";
+}
+
+// ===== NAV =====
+document.querySelectorAll(".side a").forEach(a=>{
+  a.addEventListener("click",e=>{e.preventDefault();switchSec(a.dataset.sec)});
+});
+function switchSec(s){
+  curSec=s;
+  document.querySelectorAll(".side a").forEach(a=>a.classList.toggle("active",a.dataset.sec===s));
+  document.querySelectorAll(".section").forEach(el=>el.classList.toggle("active",el.id==="sec-"+s));
+  document.getElementById("secTitle").textContent=SNAMES[s]||s;
+  render();
+}
+
+// ===== RENDER =====
+function render(){
+  document.getElementById("dateStr").textContent=new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  switch(curSec){
+    case"home":renderHome();break;
+    case"vm":renderContent("vm","Vitamonth");break;
+    case"pt":renderContent("pt","Penny Thoughts");break;
+    case"kyle":renderContent("kyle","Kyle.mp4");break;
+    case"targets":renderTargets();break;
+    case"finance":renderFinance();break;
+    case"health":renderHealth();break;
+    case"ugc":renderUGC();break;
+    case"tools":renderTools();break;
+  }
+}
+
+// ===== HOME =====
+function renderHome(){
+  const tk=todayKey(),w=getWeek();
+  const tp=D4C.reduce((s,t)=>s+(D.d4[tk]?.[t.key]==="done"?t.pts:0),0);
+  const tot=Object.values(D.d4).reduce((s,day)=>s+D4C.reduce((ss,t)=>ss+(day[t.key]==="done"?t.pts:0),0),0);
+  const inc=Object.values(D.income).reduce((s,v)=>s+v,0);
+  const gc=D.targets.filter(t=>t.d).length;
+
+  let h=`<div class="stats">
+    <div class="stat"><div class="stat-v" style="color:#22c55e">${tp}/10</div><div class="stat-l">Today</div></div>
+    <div class="stat"><div class="stat-v">${tot}</div><div class="stat-l">Total Pts</div></div>
+    <div class="stat"><div class="stat-v" style="color:#22c55e">£${Math.floor(tot/50)*20}</div><div class="stat-l">Earned</div></div>
+    <div class="stat"><div class="stat-v" style="color:#22c55e">£${inc}</div><div class="stat-l">Income</div></div>
+    <div class="stat"><div class="stat-v">${gc}/${D.targets.length}</div><div class="stat-l">Goals</div></div>
+  </div>`;
+
+  // Todos + Ideas
+  h+=`<div class="grid2">
+    <div class="card"><div class="card-h">Daily To-Dos</div>
+      <div class="row" style="margin-bottom:8px"><input class="inp" id="todoInp" placeholder="Add task..." onkeydown="if(event.key==='Enter')addTodo()"><button class="btn" onclick="addTodo()">+</button></div>
+      <div id="todoList"></div>
+    </div>
+    <div class="card"><div class="card-h">💡 Ideas</div>
+      <div class="row" style="margin-bottom:8px"><input class="inp" id="ideaInp" placeholder="Drop an idea..." onkeydown="if(event.key==='Enter')addIdea()"><button class="btn" onclick="addIdea()">+</button></div>
+      <div id="ideaList"></div>
+    </div>
+  </div>`;
+
+  // Daily 4s
+  h+=`<div class="card"><div class="row-sb" style="margin-bottom:10px"><div class="card-h" style="margin:0">Daily 4s</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="moveD4(-1)" style="background:none;border:none;color:#666;font-size:14px;cursor:pointer">←</button>
+      <span id="d4DateLabel" style="font-size:12px;font-weight:600"></span>
+      <button onclick="moveD4(1)" style="background:none;border:none;color:#666;font-size:14px;cursor:pointer">→</button>
+    </div></div><div id="d4Items"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:12px;padding:8px 12px;background:#1a1a1a;border-radius:6px">
+      <span style="font-size:12px;color:#666">Today: ${tp}/10</span>
+      <span style="font-size:12px;color:#666">Total: ${tot}pts</span>
+      <span style="font-size:12px;color:#22c55e">£${Math.floor(tot/50)*20} earned</span>
+    </div>
+  </div>`;
+
+  // Week grid
+  h+=`<div class="card"><div class="card-h">This Week</div><div class="wk-grid"><div></div>`;
+  w.forEach(d=>{h+=`<div class="wk-hdr ${d===tk?'today':''}">${dn(d)}<br>${dl(d)}</div>`});
+  D4C.forEach(t=>{
+    h+=`<div class="wk-label" style="color:${t.color}">${t.key}</div>`;
+    w.forEach(d=>{
+      const done=D.d4[d]?.[t.key]==="done";
+      h+=`<div class="wk-cell ${d===tk?'today-border':''}" style="background:${done?t.color:'#1a1a1a'}" onclick="toggleD4('${d}','${t.key}')"></div>`;
+    });
+  });
+  h+=`</div></div>`;
+
+  // Weekly tasks
+  h+=`<div class="card"><div class="card-h">Weekly Tasks</div>
+    <div class="row" style="margin-bottom:8px"><input class="inp" id="weekInp" placeholder="Add weekly task..." onkeydown="if(event.key==='Enter')addWeekly()"><button class="btn" onclick="addWeekly()">+</button></div>
+    <div id="weekList"></div></div>`;
+
+  // Calendar
+  h+=`<div class="card" style="padding:20px"><div class="row-sb" style="margin-bottom:16px">
+    <button onclick="moveMonth(-1)" style="background:none;border:none;color:#666;font-size:18px;cursor:pointer;padding:4px 12px">←</button>
+    <span style="font-size:16px;font-weight:700;color:#fff">${MONTHS[calM]} ${calY}</span>
+    <button onclick="moveMonth(1)" style="background:none;border:none;color:#666;font-size:18px;cursor:pointer;padding:4px 12px">→</button>
+  </div><div class="cal-grid">`;
+  DAYS.forEach(d=>{h+=`<div class="cal-hdr">${d}</div>`});
+  getMonth(calY,calM).forEach(d=>{
+    if(!d){h+=`<div></div>`;return}
+    const has=D.d4[d],allD=has&&D4C.every(t=>has[t.key]==="done"),someD=has&&D4C.some(t=>has[t.key]==="done");
+    const evts=D.calEvents[d]||[];
+    let cls="cal-day";if(d===tk)cls+=" today";else if(allD)cls+=" all-done";else if(someD)cls+=" some-done";
+    h+=`<div class="${cls}" onclick="openCalDay('${d}')">${dl(d)}${evts.length?'<div class="cal-dot"></div>':''}</div>`;
+  });
+  h+=`</div><div id="calPopup" style="margin-top:12px;display:none"></div></div>`;
+
+  document.getElementById("sec-home").innerHTML=h;
+  renderTodos();renderIdeas();renderWeekly();renderD4();
+}
+
+function renderD4(){
+  const el=document.getElementById("d4Items");if(!el)return;
+  const lbl=document.getElementById("d4DateLabel");
+  lbl.textContent=d4Dt===todayKey()?"Today":new Date(d4Dt+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+  lbl.style.color=d4Dt===todayKey()?"#fe2c55":"#888";
+  let h="";
+  D4C.forEach(t=>{
+    const done=D.d4[d4Dt]?.[t.key]==="done";
+    h+=`<div class="d4-item ${done?'done':''}" style="--c:${t.color};${done?'background:'+t.color+'15':''}" onclick="toggleD4('${d4Dt}','${t.key}')">
+      <div class="d4-chk">${done?"✓":""}</div>
+      <span style="flex:1;font-size:14px;font-weight:500;color:${done?t.color:'#ccc'}">${t.key}</span>
+      <span style="font-size:11px;color:${done?t.color:'#444'}">${t.pts}pts</span>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+function moveD4(dir){const d=new Date(d4Dt+"T12:00:00");d.setDate(d.getDate()+dir);d4Dt=dk(d);renderD4()}
+function toggleD4(date,task){if(!D.d4[date])D.d4[date]={};D.d4[date][task]=D.d4[date][task]==="done"?"":"done";queueSave();render()}
+
+function renderTodos(){
+  const el=document.getElementById("todoList");if(!el)return;
+  el.innerHTML=D.todos.map(t=>`<div class="chk"><div class="chk-box ${t.d?'done':''}" onclick="togTodo('${t.id}')">${t.d?"✓":""}</div><span class="chk-t ${t.d?'done':''}">${esc(t.t)}</span><span class="chk-x" onclick="remTodo('${t.id}')">✕</span></div>`).join("");
+}
+function addTodo(){const i=document.getElementById("todoInp");if(!i.value.trim())return;D.todos.push({id:uid(),t:i.value.trim(),d:false});i.value="";queueSave();renderTodos()}
+function togTodo(id){const t=D.todos.find(x=>x.id==id);if(t)t.d=!t.d;queueSave();renderTodos()}
+function remTodo(id){D.todos=D.todos.filter(x=>x.id!=id);queueSave();renderTodos()}
+
+function renderIdeas(){
+  const el=document.getElementById("ideaList");if(!el)return;
+  el.innerHTML=D.ideas.slice(0,5).map(i=>`<div class="chk"><span class="chk-t" style="font-size:12px">${esc(i.t)}</span><span style="font-size:10px;color:#444">${i.date||""}</span><span class="chk-x" onclick="remIdea('${i.id}')">✕</span></div>`).join("");
+}
+function addIdea(){const i=document.getElementById("ideaInp");if(!i.value.trim())return;D.ideas.unshift({id:uid(),t:i.value.trim(),date:todayKey()});i.value="";queueSave();renderIdeas()}
+function remIdea(id){D.ideas=D.ideas.filter(x=>x.id!=id);queueSave();renderIdeas()}
+
+function renderWeekly(){
+  const el=document.getElementById("weekList");if(!el)return;
+  el.innerHTML=D.weekly.map(t=>`<div class="chk"><div class="chk-box ${t.d?'done':''}" onclick="togWeekly('${t.id}')">${t.d?"✓":""}</div><span class="chk-t ${t.d?'done':''}">${esc(t.t)}</span><span class="chk-x" onclick="remWeekly('${t.id}')">✕</span></div>`).join("");
+}
+function addWeekly(){const i=document.getElementById("weekInp");if(!i.value.trim())return;D.weekly.push({id:uid(),t:i.value.trim(),d:false});i.value="";queueSave();renderWeekly()}
+function togWeekly(id){const t=D.weekly.find(x=>x.id==id);if(t)t.d=!t.d;queueSave();renderWeekly()}
+function remWeekly(id){D.weekly=D.weekly.filter(x=>x.id!=id);queueSave();renderWeekly()}
+
+function moveMonth(dir){if(dir<0){if(calM===0){calM=11;calY--}else calM--}else{if(calM===11){calM=0;calY++}else calM++}render()}
+function openCalDay(date){
+  const p=document.getElementById("calPopup");
+  const evts=D.calEvents[date]||[];
+  let h=`<div class="card"><div class="card-h">${date}</div>`;
+  evts.forEach((e,i)=>{h+=`<div class="chk"><span class="chk-t" style="font-size:12px">${esc(e)}</span><span class="chk-x" onclick="remCalEvt('${date}',${i})">✕</span></div>`});
+  h+=`<div class="row" style="margin-top:8px"><input class="inp inp-sm" id="calEvtInp" placeholder="Add event..." onkeydown="if(event.key==='Enter')addCalEvt('${date}')"><button class="btn" style="padding:6px 12px;font-size:12px" onclick="addCalEvt('${date}')">+</button></div></div>`;
+  p.innerHTML=h;p.style.display="block";
+}
+function addCalEvt(date){const i=document.getElementById("calEvtInp");if(!i.value.trim())return;if(!D.calEvents[date])D.calEvents[date]=[];D.calEvents[date].push(i.value.trim());i.value="";queueSave();openCalDay(date);render()}
+function remCalEvt(date,idx){D.calEvents[date].splice(idx,1);queueSave();openCalDay(date);render()}
+
+// ===== CONTENT =====
+function renderContent(ch,name){
+  const items=D.content[ch]||[];
+  let h=`<div class="card"><div class="card-h">Add Content</div>
+    <div class="row" style="gap:8px"><input class="inp" id="cHook" placeholder="Hook..."><input class="inp" id="cIdea" placeholder="Video idea..."><button class="btn" onclick="addC('${ch}')">Add</button></div></div>`;
+  h+=`<div class="card"><div class="card-h">${name} Content Tracker</div><div style="overflow-x:auto">
+    <table style="min-width:900px"><thead><tr>`;
+  ["#","Hook","Video Idea","Schedule","✓","Status","Views","Ret%","Full%","Follows","Caption","CTA","Notes",""].forEach(x=>{h+=`<th>${x}</th>`});
+  h+=`</tr></thead><tbody>`;
+  items.forEach((c,idx)=>{
+    const sCol=c.status==="Posted"?"#22c55e":c.status==="Filmed"?"#f59e0b":c.status==="Edited"?"#8b5cf6":"#444";
+    h+=`<tr>
+      <td style="color:#555;font-size:10px">${items.length-idx}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','hook',this)" style="color:#fff;font-weight:500;max-width:120px">${esc(c.hook||"")}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','idea',this)" style="color:#ccc;max-width:120px">${esc(c.idea||"")}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','schedDate',this)" style="color:#888;font-size:10px">${esc(c.schedDate||"")}</td>
+      <td><div class="chk-box ${c.posted?'done':''}" style="width:14px;height:14px" onclick="togC('${ch}','${c.id}')">${c.posted?"✓":""}</div></td>
+      <td><span class="sbadge" style="background:${sCol}25;color:${sCol}" onclick="cycleCStatus('${ch}','${c.id}',this)">${c.status||"Idea"}</span></td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','views',this)" style="color:#888">${c.views||"-"}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','retention',this)" style="color:${parseFloat(c.retention)>=60?'#22c55e':parseFloat(c.retention)>=40?'#eab308':'#888'}">${c.retention?c.retention+"%":"-"}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','fullVid',this)" style="color:#888">${c.fullVid||"-"}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','followers',this)" style="color:#888">${c.followers||"-"}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','caption',this)" style="color:#666;font-size:10px;max-width:100px">${esc(c.caption||"")}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','cta',this)" style="color:#666;font-size:10px">${esc(c.cta||"")}</td>
+      <td class="td-edit" onclick="editCField('${ch}','${c.id}','notes',this)" style="color:#555;font-size:10px;max-width:80px">${esc(c.notes||"")}</td>
+      <td><span class="chk-x" onclick="remC('${ch}','${c.id}')">✕</span></td>
+    </tr>`;
+  });
+  h+=`</tbody></table>${items.length===0?'<div style="padding:20px;text-align:center;color:#444;font-size:12px">No content yet</div>':''}</div></div>`;
+  document.getElementById("sec-"+ch).innerHTML=h;
+}
+function addC(ch){
+  const hook=document.getElementById("cHook"),idea=document.getElementById("cIdea");
+  if(!hook.value.trim()&&!idea.value.trim())return;
+  if(!D.content[ch])D.content[ch]=[];
+  D.content[ch].unshift({id:uid(),hook:hook.value.trim(),idea:idea.value.trim(),schedDate:"",posted:false,status:"Idea",views:"",retention:"",fullVid:"",followers:"",caption:"",cta:"",notes:"",date:todayKey()});
+  hook.value="";idea.value="";queueSave();renderContent(ch,ch==="vm"?"Vitamonth":ch==="pt"?"Penny Thoughts":"Kyle.mp4");
+}
+function editCField(ch,id,field,el){
+  const item=D.content[ch].find(c=>c.id==id);if(!item)return;
+  const cur=item[field]||"";
+  const inp=document.createElement("input");inp.className="inp inp-sm";inp.value=cur;inp.style.maxWidth="140px";
+  el.textContent="";el.appendChild(inp);inp.focus();
+  const finish=()=>{item[field]=inp.value;queueSave();renderContent(ch,ch==="vm"?"Vitamonth":ch==="pt"?"Penny Thoughts":"Kyle.mp4")};
+  inp.onblur=finish;inp.onkeydown=e=>{if(e.key==="Enter")finish()};
+}
+function togC(ch,id){const c=D.content[ch].find(x=>x.id==id);if(c)c.posted=!c.posted;queueSave();renderContent(ch,ch==="vm"?"Vitamonth":ch==="pt"?"Penny Thoughts":"Kyle.mp4")}
+function cycleCStatus(ch,id){
+  const c=D.content[ch].find(x=>x.id==id);if(!c)return;
+  const i=CSTATUSES.indexOf(c.status);c.status=CSTATUSES[(i+1)%CSTATUSES.length];
+  queueSave();renderContent(ch,ch==="vm"?"Vitamonth":ch==="pt"?"Penny Thoughts":"Kyle.mp4");
+}
+function remC(ch,id){D.content[ch]=D.content[ch].filter(x=>x.id!=id);queueSave();renderContent(ch,ch==="vm"?"Vitamonth":ch==="pt"?"Penny Thoughts":"Kyle.mp4")}
+
+// ===== TARGETS =====
+function renderTargets(){
+  const done=D.targets.filter(t=>t.d).length;
+  const tot=Object.values(D.d4).reduce((s,day)=>s+D4C.reduce((ss,t)=>ss+(day[t.key]==="done"?t.pts:0),0),0);
+  let h=`<div class="card"><div class="row-sb" style="margin-bottom:10px"><div class="card-h" style="margin:0">2026 Targets</div><span style="font-size:12px;color:#666">${done}/${D.targets.length}</span></div>
+    <div style="height:4px;background:#1a1a1a;border-radius:2px;overflow:hidden;margin-bottom:16px"><div style="height:100%;background:#fe2c55;border-radius:2px;width:${(done/D.targets.length)*100}%"></div></div>
+    <div class="row" style="margin-bottom:12px"><input class="inp" id="targetInp" placeholder="Add new target..." onkeydown="if(event.key==='Enter')addTarget()"><button class="btn" onclick="addTarget()">+</button></div>`;
+  D.targets.forEach(t=>{
+    h+=`<div class="chk" style="padding:10px 0;opacity:${t.d?0.4:1}"><div class="chk-box ${t.d?'done':''}" style="width:18px;height:18px;border-radius:50%" onclick="togTarget('${t.id}')">${t.d?"✓":""}</div>
+      <span class="chk-t ${t.d?'done':''}" style="font-size:14px" onclick="editTarget('${t.id}',this)">${esc(t.t)}</span>
+      <span class="chk-x" onclick="remTarget('${t.id}')">✕</span></div>`;
+  });
+  h+=`</div><div class="card"><div class="card-h">Points Tracker</div>
+    <div class="row-sb" style="margin-bottom:6px"><span style="font-size:13px;color:#888">Total points</span><span style="font-size:16px;font-weight:700">${tot}</span></div>
+    <div class="row-sb" style="margin-bottom:6px"><span style="font-size:13px;color:#888">Reward money</span><span style="font-size:16px;font-weight:700;color:#22c55e">£${Math.floor(tot/50)*20}</span></div>
+    <div class="row-sb" style="margin-bottom:6px"><span style="font-size:13px;color:#888">To next £20</span><span style="font-size:13px;color:#ccc">${50-(tot%50)} pts</span></div>
+    <div style="height:4px;background:#1a1a1a;border-radius:2px;overflow:hidden;margin-bottom:12px"><div style="height:100%;background:#fe2c55;border-radius:2px;width:${((tot%50)/50)*100}%"></div></div>
+    <div class="row-sb" style="margin-bottom:4px"><span style="font-size:13px;color:#888">Meta glasses</span><span style="font-size:13px;color:#ccc">${tot}/750</span></div>
+    <div style="height:4px;background:#1a1a1a;border-radius:2px;overflow:hidden"><div style="height:100%;background:#f59e0b;border-radius:2px;width:${Math.min((tot/750)*100,100)}%"></div></div>
+  </div>`;
+  document.getElementById("sec-targets").innerHTML=h;
+}
+function addTarget(){const i=document.getElementById("targetInp");if(!i.value.trim())return;D.targets.push({id:uid(),t:i.value.trim(),d:false});i.value="";queueSave();renderTargets()}
+function togTarget(id){const t=D.targets.find(x=>x.id==id);if(t)t.d=!t.d;queueSave();renderTargets()}
+function remTarget(id){D.targets=D.targets.filter(x=>x.id!=id);queueSave();renderTargets()}
+function editTarget(id,el){
+  const t=D.targets.find(x=>x.id==id);if(!t)return;
+  const inp=document.createElement("input");inp.className="inp inp-sm";inp.value=t.t;
+  el.textContent="";el.parentElement.insertBefore(inp,el);el.style.display="none";inp.focus();
+  const finish=()=>{t.t=inp.value;queueSave();renderTargets()};
+  inp.onblur=finish;inp.onkeydown=e=>{if(e.key==="Enter")finish()};
+}
+
+// ===== FINANCE =====
+function renderFinance(){
+  const inc=Object.values(D.income).reduce((s,v)=>s+v,0);
+  let h=`<div class="card"><div class="card-h">Monthly Income</div>`;
+  [["VM Retainer","vm"],["UGC","ugc"],["Joinery","joinery"],["Other","other"]].forEach(([l,k])=>{
+    h+=`<div class="row-sb" style="padding:8px 0;border-bottom:1px solid #1e1e1e"><span style="font-size:13px;color:#ccc">${l}</span>
+      <div style="display:flex;align-items:center;gap:4px"><span style="font-size:12px;color:#555">£</span>
+      <input class="inp inp-sm" style="width:80px;text-align:right" value="${D.income[k]}" onchange="D.income['${k}']=parseFloat(this.value)||0;queueSave();renderFinance()"></div></div>`;
+  });
+  h+=`<div class="row-sb" style="padding:12px 0;border-top:1px solid #2a2a2a;margin-top:8px"><span style="font-size:15px;font-weight:700">Total</span><span style="font-size:15px;font-weight:700;color:#22c55e">£${inc}/month</span></div></div>`;
+
+  h+=`<div class="card"><div class="card-h">Investments</div>`;
+  [["S&P 500","snp"],["Trading","trading"]].forEach(([l,k])=>{
+    h+=`<div class="row-sb" style="padding:8px 0;border-bottom:1px solid #1e1e1e"><span style="font-size:13px;color:#ccc">${l}</span>
+      <div style="display:flex;align-items:center;gap:4px"><span style="font-size:12px;color:#555">£</span>
+      <input class="inp inp-sm" style="width:80px;text-align:right" value="${D.investments[k]}" onchange="D.investments['${k}']=parseFloat(this.value)||0;queueSave();renderFinance()"></div></div>`;
+  });
+  h+=`<div class="row-sb" style="padding:12px 0"><span style="font-size:14px;color:#ccc">Total invested</span><span style="font-size:14px;font-weight:700;color:#22c55e">£${D.investments.snp+D.investments.trading}</span></div></div>`;
+
+  h+=`<div class="card"><div class="card-h">Savings</div>
+    <div class="row-sb" style="padding:8px 0"><span style="font-size:13px;color:#ccc">Current</span>
+    <div style="display:flex;align-items:center;gap:4px"><span style="font-size:12px;color:#555">£</span>
+    <input class="inp inp-sm" style="width:80px;text-align:right" value="${D.savings}" onchange="D.savings=parseFloat(this.value)||0;queueSave();renderFinance()"></div></div>
+    <div style="margin-top:8px;font-size:11px;color:#555">Target: £3,000-£6,000</div>
+    <div style="height:4px;background:#1a1a1a;border-radius:2px;overflow:hidden;margin-top:4px"><div style="height:100%;background:${D.savings>=3000?'#22c55e':'#eab308'};border-radius:2px;width:${Math.min((D.savings/6000)*100,100)}%"></div></div></div>`;
+  document.getElementById("sec-finance").innerHTML=h;
+}
+
+// ===== HEALTH =====
+function renderHealth(){
+  const groups=[{id:"upperA",label:"Upper A"},{id:"lower",label:"Lower"},{id:"upperB",label:"Upper B"}];
+  let h=`<div class="card"><div class="card-h">Current Focus</div>
+    <input class="inp" value="${esc(D.gym.focus)}" onchange="D.gym.focus=this.value;queueSave()" style="color:#fe2c55;font-weight:500"></div>`;
+
+  groups.forEach(g=>{
+    const exs=D.gym.exercises.filter(e=>e.group===g.id);
+    h+=`<div class="card"><div class="card-h">${g.label}</div>
+      <table><thead><tr><th>Exercise</th><th>Weight</th><th>Sets</th><th></th></tr></thead><tbody>`;
+    exs.forEach(e=>{
+      h+=`<tr>
+        <td class="td-edit" onclick="editExField('${e.id}','name',this)" style="color:#ccc">${esc(e.name)}</td>
+        <td class="td-edit" onclick="editExField('${e.id}','weight',this)" style="color:#22c55e;font-weight:600">${esc(e.weight)}</td>
+        <td class="td-edit" onclick="editExField('${e.id}','sets',this)" style="color:#888">${esc(e.sets)}</td>
+        <td><span class="chk-x" onclick="remExercise('${e.id}')">✕</span></td></tr>`;
+    });
+    h+=`</tbody></table>${exs.length===0?'<div style="padding:10px;text-align:center;color:#333;font-size:11px">No exercises</div>':''}
+      <div class="ex-row"><input class="inp inp-sm" id="exN_${g.id}" placeholder="Exercise"><input class="inp inp-sm" id="exW_${g.id}" placeholder="Weight"><input class="inp inp-sm" id="exS_${g.id}" placeholder="Sets">
+      <button class="btn" style="padding:6px 12px;font-size:12px" onclick="addExercise('${g.id}')">+</button></div></div>`;
+  });
+
+  h+=`<div class="card"><div class="card-h">Notes</div>
+    <textarea class="inp" style="min-height:80px;resize:vertical" onchange="D.gym.notes=this.value;queueSave()">${esc(D.gym.notes)}</textarea></div>`;
+  document.getElementById("sec-health").innerHTML=h;
+}
+function addExercise(group){
+  const n=document.getElementById("exN_"+group),w=document.getElementById("exW_"+group),s=document.getElementById("exS_"+group);
+  if(!n.value.trim())return;
+  D.gym.exercises.push({id:uid(),name:n.value.trim(),weight:w.value,sets:s.value,group});
+  n.value="";w.value="";s.value="";queueSave();renderHealth();
+}
+function editExField(id,field,el){
+  const ex=D.gym.exercises.find(e=>e.id==id);if(!ex)return;
+  const inp=document.createElement("input");inp.className="inp inp-sm";inp.value=ex[field]||"";inp.style.maxWidth="100px";
+  el.textContent="";el.appendChild(inp);inp.focus();
+  const finish=()=>{ex[field]=inp.value;queueSave();renderHealth()};
+  inp.onblur=finish;inp.onkeydown=e=>{if(e.key==="Enter")finish()};
+}
+function remExercise(id){D.gym.exercises=D.gym.exercises.filter(e=>e.id!=id);queueSave();renderHealth()}
+
+// ===== UGC =====
+function renderUGC(){
+  const niches=[["Health & Wellness","hw",4],["Lifestyle & Travel","lt",4],["Tech & Gear","tg",4],["Food & Drink","fd",4],["Outdoor & Adventure","oa",4],["Daily Life Clips","daily",3],["Meet the Creator","meet",1]];
+  let h=`<div class="card"><div class="card-h">Portfolio Progress</div>`;
+  niches.forEach(([name,key,max])=>{
+    const v=D.ugcPortfolio[key]||0;
+    h+=`<div class="row-sb" style="padding:8px 0;border-bottom:1px solid #1e1e1e"><span style="font-size:13px;color:#ccc">${name}</span>
+      <div style="display:flex;align-items:center;gap:8px"><div style="display:flex;gap:3px">`;
+    for(let i=0;i<max;i++){h+=`<div class="pdot" style="background:${i<v?'#22c55e':'#2a2a2a'}" onclick="setPortfolio('${key}',${i+1},${max})"></div>`}
+    h+=`</div><span style="font-size:11px;color:#555">${v}/${max}</span></div></div>`;
+  });
+  h+=`</div>`;
+
+  h+=`<div class="card"><div class="card-h">Brand Tracker</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:6px;margin-bottom:10px">
+      <input class="inp inp-sm" id="bName" placeholder="Brand name"><input class="inp inp-sm" id="bNiche" placeholder="Niche">
+      <button class="btn" style="padding:6px 12px;font-size:12px" onclick="addBrand()">+</button></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>Brand</th><th>Niche</th><th>Status</th><th>Contact</th><th>Notes</th><th></th></tr></thead><tbody>`;
+  D.ugcBrands.forEach(b=>{
+    const sCol=b.status==="Deal Locked"?"#22c55e":b.status==="Pitched"?"#3b82f6":"#666";
+    h+=`<tr>
+      <td style="color:#ccc">${esc(b.name)}</td><td style="color:#888">${esc(b.niche)}</td>
+      <td><span class="sbadge" style="background:${sCol}25;color:${sCol}" onclick="cycleBStatus('${b.id}')">${b.status}</span></td>
+      <td class="td-edit" onclick="editBField('${b.id}','contact',this)" style="color:#888;font-size:12px">${esc(b.contact||"")}</td>
+      <td class="td-edit" onclick="editBField('${b.id}','notes',this)" style="color:#666;font-size:12px">${esc(b.notes||"")}</td>
+      <td><span class="chk-x" onclick="remBrand('${b.id}')">✕</span></td></tr>`;
+  });
+  h+=`</tbody></table>${D.ugcBrands.length===0?'<div style="padding:16px;text-align:center;color:#444;font-size:12px">No brands yet</div>':''}</div></div>`;
+  document.getElementById("sec-ugc").innerHTML=h;
+}
+function setPortfolio(key,val,max){D.ugcPortfolio[key]=D.ugcPortfolio[key]===val?val-1:val;queueSave();renderUGC()}
+function addBrand(){
+  const n=document.getElementById("bName"),ni=document.getElementById("bNiche");
+  if(!n.value.trim())return;
+  D.ugcBrands.push({id:uid(),name:n.value.trim(),niche:ni.value,status:"Research",contact:"",notes:""});
+  n.value="";ni.value="";queueSave();renderUGC();
+}
+function cycleBStatus(id){const b=D.ugcBrands.find(x=>x.id==id);if(!b)return;const i=BSTATUSES.indexOf(b.status);b.status=BSTATUSES[(i+1)%BSTATUSES.length];queueSave();renderUGC()}
+function editBField(id,field,el){
+  const b=D.ugcBrands.find(x=>x.id==id);if(!b)return;
+  const inp=document.createElement("input");inp.className="inp inp-sm";inp.value=b[field]||"";inp.style.maxWidth="120px";
+  el.textContent="";el.appendChild(inp);inp.focus();
+  const finish=()=>{b[field]=inp.value;queueSave();renderUGC()};
+  inp.onblur=finish;inp.onkeydown=e=>{if(e.key==="Enter")finish()};
+}
+function remBrand(id){D.ugcBrands=D.ugcBrands.filter(x=>x.id!=id);queueSave();renderUGC()}
+
+// ===== TOOLS =====
+function renderTools(){
+  let h=`<div class="card"><div class="card-h">Quick Access Tools</div><div class="tools-grid">`;
+  D.tools.forEach(t=>{
+    h+=`<div class="tool-card"><h4>${esc(t.name)}</h4><p>${esc(t.desc)}</p>`;
+    if(t.url){h+=`<a href="${t.url.startsWith('http')?t.url:'https://'+t.url}" target="_blank">Open →</a>`}
+    else{h+=`<span style="font-size:10px;color:#444">No link</span>`}
+    h+=`<span class="del" onclick="remTool('${t.id}')">✕</span></div>`;
+  });
+  h+=`</div></div><div class="card"><div class="card-h">Add Tool</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <input class="inp" id="tName" placeholder="Tool name">
+      <input class="inp" id="tUrl" placeholder="URL (include https://)">
+      <input class="inp" id="tDesc" placeholder="What it does">
+      <button class="btn" onclick="addTool()">Add Tool</button></div></div>`;
+  document.getElementById("sec-tools").innerHTML=h;
+}
+function addTool(){
+  const n=document.getElementById("tName"),u=document.getElementById("tUrl"),d=document.getElementById("tDesc");
+  if(!n.value.trim())return;
+  D.tools.push({id:uid(),name:n.value.trim(),url:u.value,desc:d.value});
+  n.value="";u.value="";d.value="";queueSave();renderTools();
+}
+function remTool(id){D.tools=D.tools.filter(t=>t.id!=id);queueSave();renderTools()}
+
+// ===== HELPERS =====
+function esc(s){if(!s)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+// ===== INIT =====
+D=JSON.parse(JSON.stringify(INIT));
+render();
+loadData();
+</script>
+</body>
+</html>
