@@ -251,119 +251,111 @@ function getMonth(y,m){
 function uid(){return Date.now()+Math.random().toString(36).substr(2,5)}
 
 // ===== STORAGE =====
-const JB_KEY="$2a$10$tB86CuQj6Eu5pEUfRv796.Yh7mm/0lKYMVubYwFRFDO17g8iiAaRC";
-const JB_URL="https://api.jsonbin.io/v3/b";
-let binId=null;
+// ===== STORAGE =====
+const WORKER_URL = "dashboard-api.kyle-crookshank-creator.workers.dev
+"; // Put your https://... link here
 
-async function loadData(){
+async function loadData() {
   // Try localStorage first for instant load
-  try{const s=localStorage.getItem("kyle-hub-v6");if(s){D={...INIT,...JSON.parse(s)};render()}}catch(e){}
+  try {
+    const s = localStorage.getItem("kyle-hub-v6");
+    if (s) { D = { ...INIT, ...JSON.parse(s) }; render(); }
+  } catch (e) {}
 
-  // Check for existing bin ID
-  try{binId=localStorage.getItem("kyle-bin-id")}catch(e){}
-
-  if(binId){
-    // Load from cloud
-    showStatus("loading from cloud...","dim");
-    try{
-      const res=await fetch(JB_URL+"/"+binId+"/latest",{headers:{"X-Access-Key":JB_KEY}});
-      if(res.ok){
-        const json=await res.json();
-        if(json.record){
-          D={...INIT,...json.record};
-          try{localStorage.setItem("kyle-hub-v6",JSON.stringify(D))}catch(e){}
-          showStatus("loaded from cloud ✓","ok");
-          render();
-        }
-      }else{
-        showStatus("cloud load failed, using local","warn");
-        if(!D)D=JSON.parse(JSON.stringify(INIT));
+  // Load from Cloudflare R2
+  showStatus("loading from cloud...", "dim");
+  try {
+    const res = await fetch(WORKER_URL, { method: "GET" });
+    if (res.ok) {
+      const json = await res.json();
+      
+      // If the cloud file has data, use it. If it's an empty object, use INIT.
+      if (json && Object.keys(json).length > 0) {
+        D = { ...INIT, ...json };
+      } else {
+        if (!D) D = JSON.parse(JSON.stringify(INIT));
       }
-    }catch(e){
-      showStatus("offline, using local data","warn");
-      if(!D)D=JSON.parse(JSON.stringify(INIT));
+      
+      try { localStorage.setItem("kyle-hub-v6", JSON.stringify(D)); } catch (e) {}
+      showStatus("loaded from cloud ✓", "ok");
+      render();
+    } else {
+      showStatus("cloud load failed, using local", "warn");
+      if (!D) D = JSON.parse(JSON.stringify(INIT));
     }
-  }else{
-    // First time, create a bin
-    if(!D)D=JSON.parse(JSON.stringify(INIT));
-    showStatus("setting up cloud...","dim");
-    try{
-      const res=await fetch(JB_URL,{method:"POST",headers:{"Content-Type":"application/json","X-Access-Key":JB_KEY,"X-Bin-Name":"kyle-dashboard"},body:JSON.stringify(D)});
-      if(res.ok){
-        const json=await res.json();
-        binId=json.metadata.id;
-        try{localStorage.setItem("kyle-bin-id",binId)}catch(e){}
-        showStatus("cloud storage ready ✓","ok");
-      }else{
-        showStatus("cloud setup failed, using local only","warn");
-      }
-    }catch(e){
-      showStatus("offline, using local only","warn");
-    }
+  } catch (e) {
+    showStatus("offline, using local data", "warn");
+    if (!D) D = JSON.parse(JSON.stringify(INIT));
   }
-  if(!D)D=JSON.parse(JSON.stringify(INIT));
+  
+  if (!D) D = JSON.parse(JSON.stringify(INIT));
   render();
 }
 
-async function saveData(){
+async function saveData() {
   // Always save to localStorage first (instant, reliable)
-  try{localStorage.setItem("kyle-hub-v6",JSON.stringify(D))}catch(e){}
+  try { localStorage.setItem("kyle-hub-v6", JSON.stringify(D)); } catch (e) {}
 
-  // Then save to cloud
-  if(binId){
-    showStatus("saving to cloud...","dim");
-    try{
-      const res=await fetch(JB_URL+"/"+binId,{method:"PUT",headers:{"Content-Type":"application/json","X-Access-Key":JB_KEY},body:JSON.stringify(D)});
-      if(res.ok){
-        unsaved=false;updateSaveBtn();
-        showStatus("saved to cloud ✓","ok");
-      }else{
-        showStatus("cloud save failed, saved locally","warn");
-        unsaved=false;updateSaveBtn();
-      }
-    }catch(e){
-      showStatus("offline, saved locally","warn");
-      unsaved=false;updateSaveBtn();
+  // Then save to Cloudflare R2
+  showStatus("saving to cloud...", "dim");
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(D)
+    });
+    
+    if (res.ok) {
+      unsaved = false; updateSaveBtn();
+      showStatus("saved to cloud ✓", "ok");
+    } else {
+      showStatus("cloud save failed, saved locally", "warn");
+      unsaved = false; updateSaveBtn();
     }
-  }else{
-    unsaved=false;updateSaveBtn();
-    showStatus("saved locally ✓","ok");
+  } catch (e) {
+    showStatus("offline, saved locally", "warn");
+    unsaved = false; updateSaveBtn();
   }
 }
 
-function queueSave(){
-  unsaved=true;updateSaveBtn();
+function queueSave() {
+  unsaved = true; updateSaveBtn();
   // Save to localStorage immediately
-  try{localStorage.setItem("kyle-hub-v6",JSON.stringify(D))}catch(e){}
+  try { localStorage.setItem("kyle-hub-v6", JSON.stringify(D)); } catch (e) {}
   // Debounce cloud save
-  if(saveT)clearTimeout(saveT);
-  saveT=setTimeout(saveData,3000);
-}
-function forceSave(){if(saveT)clearTimeout(saveT);saveData()}
-function showStatus(t,type){
-  const el=document.getElementById("saveStatus");
-  el.textContent=t;el.className="status status-"+(type||"dim");
-  if(type==="ok")setTimeout(()=>{el.textContent=""},2000);
-}
-function updateSaveBtn(){
-  const b=document.getElementById("saveBtn"),u=document.getElementById("unsavedBadge");
-  if(unsaved){b.className="warn";b.textContent="⚠️ Save Now";u.style.display="inline"}
-  else{b.className="";b.textContent="💾 Save Now";u.style.display="none"}
-}
-function exportData(){
-  const b=new Blob([JSON.stringify(D,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(b);
-  a.download="kyle-dashboard-"+todayKey()+".json";a.click();URL.revokeObjectURL(a.href);
-  showStatus("exported ✓","ok");
-}
-function importData(e){
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=function(){
-    try{const p=JSON.parse(r.result);D={...INIT,...p};saveData();render();showStatus("imported ✓","ok")}
-    catch(er){showStatus("invalid file!","err")}
-  };r.readAsText(f);e.target.value="";
+  if (saveT) clearTimeout(saveT);
+  saveT = setTimeout(saveData, 3000);
 }
 
+function forceSave() { if (saveT) clearTimeout(saveT); saveData(); }
+
+function showStatus(t, type) {
+  const el = document.getElementById("saveStatus");
+  el.textContent = t; el.className = "status status-" + (type || "dim");
+  if (type === "ok") setTimeout(() => { el.textContent = "" }, 2000);
+}
+
+function updateSaveBtn() {
+  const b = document.getElementById("saveBtn"), u = document.getElementById("unsavedBadge");
+  if (unsaved) { b.className = "warn"; b.textContent = "⚠️ Save Now"; u.style.display = "inline"; }
+  else { b.className = ""; b.textContent = "💾 Save Now"; u.style.display = "none"; }
+}
+
+// Keep your export/import helpers exactly the same
+function exportData() {
+  const b = new Blob([JSON.stringify(D, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b);
+  a.download = "kyle-dashboard-" + todayKey() + ".json"; a.click(); URL.revokeObjectURL(a.href);
+  showStatus("exported ✓", "ok");
+}
+
+function importData(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader(); r.onload = function() {
+    try { const p = JSON.parse(r.result); D = { ...INIT, ...p }; saveData(); render(); showStatus("imported ✓", "ok"); }
+    catch (er) { showStatus("invalid file!", "err"); }
+  }; r.readAsText(f); e.target.value = "";
+}
 // ===== NAV =====
 document.querySelectorAll(".side a").forEach(a=>{
   a.addEventListener("click",e=>{e.preventDefault();switchSec(a.dataset.sec)});
